@@ -1,0 +1,388 @@
+td.focus input:not(.right){
+	color: #fff!important;
+}
+
+.right{
+	/*color: #30fa2b!important;*/
+color:#000000 !important;
+}
+
+.wrong{
+	color: #e10000!important;
+}
+
+.game-title{
+   font-weight:bold !important;
+   font-size:30px !important;
+   text-align:center !important;
+}
+.wp-side-menu{
+	display:none;
+	}
+
+		.tdClass{
+			padding: 0px;
+			text-align: center;
+			font-size: 20px;
+			width: 100%;
+			height: inherit;
+			border: none !important;
+			background-color: transparent!important;
+			min-width:20px;
+			color:#ffffff !important;
+		}
+		
+		table.cw_table td {
+			width: 20px;
+			height: 20px;
+			position:relative;
+		}
+		table.cw_table{
+			width: 100%;
+			border: 1px solid #727272;
+            background-color: #000;
+		}
+	span.letter-count {
+        position: absolute;
+        top: 0;
+        right: 0;
+        background-color: #f00;
+        width: 18px;
+        text-align: center;
+        color: #fff;
+    }
+		
+td .index span {
+    display: inline-block;
+    position: relative;
+    font-size: 8px;
+    line-height: normal;
+    top: -4px;
+	color:#000;
+	font-weight:bold;
+}
+td .index {
+    position: absolute;
+    padding: 0 2px;
+    display: block;
+    line-height: normal;
+}
+		.chapter{
+			padding: 0px;
+			border:1px solid #777;
+			margin: 10px;
+			cursor: pointer;
+		}
+		.chapter h4{
+			text-align: center;
+display: inline-block;
+    padding-left: 10px;
+    float: left;	
+		}
+		.chapter.new{
+			padding: 1px 20px;
+		}
+.chapter .operation {
+    display: inline-block;
+    margin: 10px;
+    float: right;
+}
+.chapter span {
+    display: inline-block;
+    padding: 0 3px;
+    border-radius: 2px;
+}
+.chapter span:hover {
+    background-color: #dcd7d7;
+}
+.chapter .operation span i {
+    font-size: 20px;
+}
+.chapter:after {
+    display: block;
+    content: '';
+    clear: both;
+}
+		.chapter.new h4{
+			font-size: 40px;
+		}
+		.chapters:after{
+			display: block;
+			content: '';
+			clear: both;
+		}
+		
+
+.game .col-md-2,.game .col-md-12,.game .col-md-4,.game .col-md-6,.game .col-md-8,.game .col-md-3,.col-md-1{
+	margin-bottom:0;
+	}	
+.game table{
+	border-collapse:collapse;
+	margin-bottom:0px;
+	}
+.game table tr td.down,.game table tr td.across{
+	background-color:#fff;
+	}
+
+.game table tr td{
+	padding:0 !important;
+	background-color:#000;
+	border:2px solid #232222;
+	vertical-align:middle;
+	}
+.selected-indexs{
+	background-color: #add8e6;
+	border:1px solid #2b6ed9!important;
+}
+.start-index{
+    background-color: #2b6ed9;
+}
+
+.game .free-trial table td.focus, .game .the-times table td.focus{
+	background-color: #2b6ed9!important;
+}
+		
+.game .the-sunday-times table td.focus{
+	background-color: #9c27b0!important;
+}
+			
+.game .the-sun table td.focus{
+	background-color: #ff9800!important;
+}
+		
+.game table input{
+	color:#fff;
+	border:none;
+	padding:5px 0;
+	}	
+.game label .fa{
+	font-size:30px;
+	color:#000;
+	}
+label#clues.active .fa{
+	color:#ff3f05;
+	}
+
+label#clues, label#score, label#timer, label#setting{
+	/*padding:30px 0;*/
+	}	
+label#setting:hover,label#clues:hover{
+	cursor:pointer
+	}
+label#timer.active .fa{
+	color:#2b6ed9;
+}
+.game label span {
+    font-size: 25px;
+    color: #000;
+    margin-left: 5px;
+}
+#close-menu {
+    position: absolute;
+    top: -12px;
+    right: -11px;
+    border: 1px solid #000;
+    border-radius: 50%;
+    padding: 1px 3px;
+	z-index:999;
+	background-color:#fff;
+}
+#close-menu .fa{
+	font-size:20px;
+	}
+.game .menu.active{
+	display:block;
+	}
+.game .menu{
+	position: absolute;
+    width: 200px;
+    z-index: 999;
+    background-color: #ffffff;
+    border: 1px solid #e4e1e1;
+    padding: 4px;
+    top: 65px;
+	left:-60px;
+    border-radius: 4px;
+	display:none;
+	}
+		
+.game .menu ul li{
+	list-style-type:none;	
+	}
+.game .menu ul li label{
+	padding:5px 0;
+	display:block;
+	}
+.game .menu ul li label:hover{
+	background-color:#e8e5e5;
+	}
+.game .menu ul li label .fa{
+	font-size:20px;
+}
+.game .menu ul li label span{
+	font-size:20px;
+	color:#000;
+	}
+
+#level{
+	text-align:left;
+	}
+#level .numbers .fa,#level .numbers span{
+		font-size:20px;
+	}
+
+div#game-play {
+    border: 4px solid #000;
+    background-color: #000;
+	border-radius:3px;
+	margin-top:15px;
+}
+#clues{
+	position:relative;
+	width:100%;
+	}
+
+#clues .clue-detail {
+	line-height: normal;
+    position: relative;
+    background-color: #fff;
+    border: 1px solid #e0dbdb;
+    z-index: 999;
+    padding: 2px;
+    border-radius: 3px;
+	width: 100%;
+	display:none;
+}
+#clues .clue-detail.active{
+	display:block;
+}
+.clue-detail label {
+	margin-bottom: 0px;
+    display: inline-block;
+    color: #000;
+    font-size: 12px;
+}
+.clue-detail span {
+    font-size: 15px !important;
+    display: inline-block;
+}
+.clue-detail input[type="button"] {
+	font-size: 12px;
+    padding: 2px 7px;
+    height: auto;
+}
+div#close-clue-detail {
+    position: absolute;
+    right: -10px;
+    top: -13px;
+    border-radius: 50%;
+    border: 1px solid #000;
+    padding: 0px 2px;
+    background-color: #fff;
+}
+#close-clue-detail .fa {
+    font-size: 20px;
+}
+
+/*Full screen*/
+.game-container.full-screen-active{
+	position:fixed;
+	top:0;
+	left:0;
+	width:100%;
+	height:100%;
+	background-color:#fff;
+	z-index:999;	
+}
+.game-container.full-screen-active table{
+	height:100%;
+	}
+.game-container.full-screen-active table tr td input.tdClass{
+	padding:0px;
+	height::100%;
+	width:100%;
+	
+	}
+.game-container.full-screen-active #game-play{
+	margin:0 auto;
+}
+.game-container.full-screen-active label#clues,.game-container.full-screen-active label#score,.game-container.full-screen-active label#timer,.game-container.full-screen-active label#setting,.game-container.full-screen-active #level{
+	padding:5px 0;
+	}
+.game-container.full-screen-active #game-logo{
+	display:none;
+	}
+.game-container .full-screen-menu{
+	display:none;
+	}
+.game-container.full-screen-active .full-screen-menu{
+	display:block;
+	position:absolute;
+	top:0;
+	right:0;
+	}
+.game-container.full-screen-active .full-screen-menu ul li{
+	list-style-type:none;
+	cursor:pointer;
+	}
+/*intraduction game panel*/
+.game-container #introduction{
+	position:fixed;
+	top:0;
+	left:0;
+	width:100%;
+	height:100%;
+	text-align:center;
+	background-color:#fff;
+	}
+.game-container #introduction .modal-body{
+	width:90%;
+	margin:0 auto;
+	position:relative;
+	height:100%;
+	}
+.game-container #introduction .modal-body .modal-head{
+	text-align:center;
+	}
+.game-container #introduction .modal-body .modal-content{
+	position:relative;
+	top:5%;
+	width:100%;
+	height:90%;
+	overflow:hidden;
+	}
+
+/*for fixed score bar*/
+.tool-bar{
+    position:relative;
+}
+.tool-bar.fixed {
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: #fff;
+    z-index: 9;
+}
+
+.text-editor{
+	display: block;
+    width: 100%;
+    padding: .375rem .75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    border-radius: .25rem;
+    transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+}
+input[name=cw_word]{
+    text-transform:uppercase;
+}
+#postbox-container-2 .inside{
+    overflow:auto;
+}
+
+
+	
