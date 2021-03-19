@@ -11,6 +11,23 @@
 	$gameModel = get_post_meta( get_the_ID(), 'cw_model_type_box' ,true);
 	$cw_clues_visible_box = get_post_meta(get_the_ID(),'cw_clues_visible_box',true);
 	$cw_bulk_clue_mail_box = get_post_meta(get_the_ID(),'cw_bulk_clue_mail_box',true);
+	//delete_user_meta(get_current_user_id(),'player_details');
+	$player_details = unserialize( get_user_meta(get_current_user_id(),'player_details',TRUE));
+
+	$countrylistapi = array(
+        CURLOPT_URL             => 'https://restcountries.eu/rest/v2/all/',
+        CURLOPT_POST            => false,
+        CURLOPT_HEADER          => false,
+        CURLOPT_SSL_VERIFYPEER  => false,
+        CURLOPT_RETURNTRANSFER  => true,
+        CURLOPT_SSL_VERIFYHOST  => false,
+    );
+    $curl = curl_init();
+    curl_setopt_array($curl, $countrylistapi);
+    $curl_response      = curl_exec($curl);
+    $countrylist       = json_decode($curl_response);
+
+	
 
     if(isset($_GET['cpid'])){
         $cpid = $_GET['cpid'];
@@ -325,18 +342,19 @@
 										    
 											<li><label id="reset-game"><i class="fa fa-history"></i><span>Reset Game</span></label></li>
 											<?php if(is_user_logged_in()){?>
-											<li><label id="save-game"><i class="fa fa-save"></i><span>Save</span></label></li>		
+											<!--<li><label id="save-game"><i class="fa fa-save"></i><span>Save</span></label></li>-->		
 											<?php }else{?>
 											<li><label id="reset-timer"><i class="fa fa-clock-o"></i><span>Reset Timer</span></label></li>
 											<?php }?>
 											
 											<?php if($gameModel!='drag-drop'){?>
 											<li><label id="solution-revel"><i class="fa fa-eye"></i><span>Solution</span></label></li>
-											<?php }else{?>
+											<?php }
+											/*else{?>
 											    <?php if(current_user_can( 'manage_options' ) ){ ?>
 											        <li><label id="solution-revel"><i class="fa fa-eye"></i><span>Solution</span></label></li>
 											    <?php } ?>
-											<?php }?>
+											<?php } */ ?>
 											<?php if($term->name!='Free Trial' && $term->slug!='free-trial'){?>
 												<?php if($cw_bulk_clue_mail_box=='yes'){?>
 												<li><label id="send-bulk-clue-email"><i class="fa fa-envelope"></i><span>Send Email</span></label></li>
@@ -454,8 +472,27 @@
 
 	<div class="container">
 	    <div class="row">
-    	    <div class="col-md-12">   
-            	<div class="modal competition" id="competition">
+    	    <div class="col-md-12">
+				
+				<?php if($player_details==''){ ?>
+				<div class="modal save-init-popup" id="save-init-popup">
+                	<div class="modal-body">
+                        <div class="modal-head">
+    						<div class="save-init-popup-top" style="text-align:right;"><button class="btn btn-default close"><i class="fa fa-close"></i></button></div>
+    					</div>
+                        <div class="modal-content">
+                            <p>
+                                Congratulation ! You have complete The Crossword , Share your achievement on our <a href="<?php echo site_url('leader-board');?>" target="_blank">LearderBoard</a> Page :)
+							</p>
+							
+                        </div>
+                    </div>
+                </div>
+				<?php }?>
+
+
+
+				<div class="modal competition" id="competition">
                 	<div class="modal-body">
                         <div class="modal-head">
     						<div class="competition-top" style="text-align:right;"><button class="btn btn-default close"><i class="fa fa-close"></i></button></div>
@@ -464,17 +501,83 @@
                             <p>
                                 In competition mode there is no assistance and no pausing. Begin by selecting your clue on the grid. Play will conclude automatically with a correct completed solution to the crossword and your timed performance posted to the new leader board. This facility is open to subscribers alone. These are identical conditions of play found in crossword championships.
 							</p>
+							<?php if($player_details==''){ ?>
+							<form method="post" action="">
+								<div class="row">
+									<div class="col-md-4">
+										<div class="input-group">
+											<input type="text" class="form-control" name="player_name" placeholder="Display Name" aria-describedby="basic-addon1">
+										</div>
+									</div>
+									<div class="col-md-4">
+										<div class="input-group">
+											<input type="text" class="form-control" name="player_city" placeholder="City optional" aria-describedby="basic-addon1">
+										</div>
+									</div>
+									<div class="col-md-4">
+										<div class="input-group">
+											<select class="form-control" name="player_country" aria-describedby="basic-addon1">
+												<option>Select Country</option>
+												<?php
+													foreach($countrylist as $k=>$countrylist){
+														?>
+															<option value="<?php echo $countrylist->name;?>"><?php  echo $countrylist->name; ?></option>
+														<?php
+													}
+												?>
+											</select>
+										</div>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-md-12">
+										<button type="button" name="save_player_details" class="btn">Yes</button>
+										<button type="button" name="cancel_competition" class="btn">No</button>
+									</div>
+								</div>
+							</form>
+							<?php }else{ ?>
+								<div class="row">
+									<div class="col-md-4">
+										<div class="input-group">
+											<input type="text" class="form-control" name="player_name" value="<?php echo $player_details['name']; ?>" disabled placeholder="Display Name" aria-describedby="basic-addon1">
+										</div>
+									</div>
+									<div class="col-md-4">
+										<div class="input-group">
+											<input type="text" class="form-control" name="player_city" value="<?php echo $player_details['city']; ?>" disabled placeholder="City optional" aria-describedby="basic-addon1">
+										</div>
+									</div>
+									<div class="col-md-4">
+										<div class="input-group">
+											<select class="form-control" name="player_country" aria-describedby="basic-addon1" disabled>
+												<option>Select Country</option>
+												<?php
+													foreach($countrylist as $k=>$countrylist){
+														if($player_details['country']==$countrylist->name){
+															?>
+																<option value="<?php echo $countrylist->name;?>" selected><?php  echo $countrylist->name; ?></option>
+															<?php 
+														}else{
+															?>
+																<option value="<?php echo $countrylist->name;?>"><?php  echo $countrylist->name; ?></option>
+															<?php
+														}
+													}
+												?>
+											</select>
+										</div>
+									</div>
+								</div>
+							<?php } ?>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-	</div>
 
-	<div class="container">
-	    <div class="row">
-    	    <div class="col-md-12">   
-            	<div class="modal introduction" id="introduction">
+
+
+
+				<div class="modal introduction" id="introduction">
                 	<div class="modal-body">
                         <div class="modal-head">
     						<div class="instruction-top" style="text-align:right;"><button class="btn btn-default close"><i class="fa fa-close"></i></button></div>
@@ -493,13 +596,9 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-	</div>
 
-	<div class="container">
-	    <div class="row">
-    	    <div class="col-md-12">   
+
+
             	<div class="modal how-to-play-game-video" id="how-to-play-game-video">
                 	<div class="modal-body">
                         <div class="modal-head">
@@ -535,7 +634,7 @@
         </div>
     </div>
 
-	<!--Instuction Modal -->
+	<!--Instuction Modal 
 <div class="z-modal z-fade" id="instuctionModal" tabindex="-1" role="dialog" aria-labelledby="instuctionModalTitle" aria-hidden="true">
   <div class="z-modal-dialog" role="document">
     <div class="z-modal-content">
@@ -551,6 +650,7 @@
     </div>
   </div>
 </div>
+-->
 <div class="site-main container">
 	<div class="row">
     <?php

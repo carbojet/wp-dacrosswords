@@ -42,12 +42,7 @@ font-weight:bold;
 }
 
 
-ul.crossword-tip-menu {
-    padding: 0;
-    margin: 0 auto;
-    width: 520px;
-    display:block;
-}
+
 .crossword-tip-menu li {
     list-style-type: none;
     display: inline-block;
@@ -434,7 +429,10 @@ div#close-clue-detail {
 }
 */
 /*intraduction game panel*/
-#competition,#introduction{
+#save-init-popup{
+    z-index: 9999;
+}
+#save-init-popup,#competition,#introduction{
 	position:fixed;
 	display:none;
 	top:0;
@@ -445,16 +443,16 @@ div#close-clue-detail {
 	background-color:#fff;
 	z-index:99;
 	}
-#competition .modal-body,#introduction .modal-body{
+#save-init-popup .modal-body,#competition .modal-body,#introduction .modal-body{
 	width:90%;
 	margin:0 auto;
 	position:relative;
 	height:100%;
 	}
-#competition .modal-body .modal-head,#introduction .modal-body .modal-head{
+#save-init-popup .modal-body .modal-head,#competition .modal-body .modal-head,#introduction .modal-body .modal-head{
 	text-align:center;
 	}
-#competition .modal-body .modal-content,#introduction .modal-body .modal-content{
+#save-init-popup .modal-body .modal-content,#competition .modal-body .modal-content,#introduction .modal-body .modal-content{
 	position:relative;
 	top:5%;
 	width:100%;
@@ -1001,6 +999,12 @@ video.elementor-video {
     border-radius: 50%;
   }
 @media (min-width: 300px){
+    ul.crossword-tip-menu {
+        padding: 0;
+        margin: 0 auto;
+        width: 100%;
+        display: block;
+    }
 	.game-title{
 	   font-weight:bold !important;
 	   font-size:12px !important;
@@ -1031,6 +1035,12 @@ video.elementor-video {
 	}
 }
 @media (min-width: 576px){
+    ul.crossword-tip-menu {
+        padding: 0;
+        margin: 0 auto;
+        width: 520px;
+        display: block;
+    }
 	.game-title{
 	   font-weight:bold !important;
 	   font-size:14px !important;
@@ -1060,6 +1070,12 @@ video.elementor-video {
 	}
 }
 @media (min-width: 768px){
+    ul.crossword-tip-menu {
+        padding: 0;
+        margin: 0 auto;
+        width: 520px;
+        display: block;
+    }
 	.game-title{
 	   font-weight:bold !important;
 	   font-size:20px !important;

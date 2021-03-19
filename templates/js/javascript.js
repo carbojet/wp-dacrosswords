@@ -202,9 +202,50 @@
 			
 		})
 
+		$('body').on('click','button[name=save_player_details]',function(e){
+			e.preventDefault()
+			
+			postData = {
+				action:'set_player_details',
+				player_details:{
+					name : $("input[name=player_name]").val(),
+					city : $("input[name=player_city]").val(),
+					country : $("select[name=player_country]").val(),
+				},
+				userid:$('input[name=user_id]').val()
+			}
+			$.ajax({
+				url: localjs.ajaxUrl,
+				type:'post',
+				data:postData,
+				success:function(responce){
+					console.log(responce);
+					$(".competition-top .close").trigger("click")
+				},
+				error:function(error){
+					console.log(error);
+				}
+			})
+			
+		})
+
+		$('body').on('click','button[name=cancel_competition]',function(){		
+			if($('input[name=player_name]').val()!=''){
+				$('#competition').hide();
+			}else{
+				$('#competition').hide();
+				$('input[name=competition_mode]').attr("checked",false);
+			}
+		});
+
 		
-		$('body').on('click','.competition-top .close',function(){		
-			$('#competition').hide();
+		$('body').on('click','.competition-top .close',function(){
+			if($('input[name=player_name]').val()!=''){
+				$('#competition').hide();
+			}else{
+				$('#competition').hide();
+				$('input[name=competition_mode]').attr("checked",false);
+			}
 		});
 
 		$('body').on('click','.crossword-tip-menu .introduction',function(e){
@@ -999,6 +1040,7 @@
 					//autosave on complete all clues
 					if(cluecount==currentCh.clues.length){
 						if(competitionMode){
+							//$('#save-init-popup').show();
 							$.fn.saveGame();
 						}
 					}

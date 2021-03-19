@@ -1,535 +1,225 @@
 <?php
-
 /**
-
 * plugin name: DA Crosswords
-
 * Author: Santosh Satapathy
-
 * Description: This plugin is very usefull for creating and publishing crossword game.
-
 */
-
 require_once plugin_dir_path(__FILE__).'cw-functions.php';
-
 //check if the user is subscribed for the current group
-
 function is_user_subscribed(){
-
 		global $post,$wp_query;
-
 		$mylevel = pmpro_getMembershipLevelsForUser();
-
 		$mylevel = $mylevel[0];
-
 		$pmpro_levels = pmpro_getAllLevels(false, true);
-
 		$pmpro_levels = $pmpro_levels[$mylevel->id];
-
 		$allowedCats = array();
-
 		if(isset($pmpro_levels->allowed_cats)){
-
 			$allowedCats = $pmpro_levels->allowed_cats;
-
 			$allowedCats = unserialize($allowedCats);
-
 		}
-
-		
-
 		//
-
 		if(is_single()){
-
 			$currentTerm = get_the_terms($post,'group');
-
 			$currentTerm = $currentTerm[0];
-
 			$currentTerm = $currentTerm->term_id;
-
 		}else{
-
 			$currentSlug =  get_query_var('group');
-
 			$currentTerm = get_term_by('slug',$currentSlug,'group');
-
 			$currentTerm = $currentTerm->term_id;
-
 		}
-
 		if(!in_array($currentTerm,$allowedCats)){
-
 			return FALSE;
-
 		}else{
-
 			return TRUE;
-
 		}
-
-
-
 }
-
-
-
 //display the trial crosswords in front page
-
 add_shortcode('cw-trials',function($attr=[]){
-
-	
-
 	if(!empty($attr['label-text'])){
-
 		$lebel_text = $attr['label-text'];
-
 	}else{
-
 		$lebel_text = '';
-
 	}
-
-	
-
 	if(!empty($attr['number'])){
-
 		$filter['number']=$attr['number'];
-
 	}
-
 	$filter = array(
-
 					'taxonomy'=>'group',
-
 					'hide_empty'=>TRUE,
-
 					'parent'=>0,
-
 					'slug'=>'free-trial'
-
 				);
-
-	
-
 	$cats = get_terms($filter);
-
 	$cat = $cats[0];
-
 	$cat_image = get_term_meta($cat->term_id,'group_image',TRUE);
-
-	
-
 	$data = '<div class="col-md-3 col-sm-6 col-lg-3 col-xs-12"><div class="image-grid"><span class="trial-label-index">'.$lebel_text.'</span><a href="#" ><img  src="'.$cat_image.'" /></a></div></div>';
-
 	echo $data;
-
 });
-
 //display all crosswords in index page
-
-
-
 function cw_crosswordlist($args=[]){
-
 	$args = array(
-
 	'fields'=>'ids',
-
 	'post_status' => 'publish',
-
     'post_type'=> 'cw_crosswords',
-
 	'posts_per_page'=>-1,
-
 	'meta_key' => 'cw_current_pos',
-
     'orderby' => 'meta_value_num',
-
     'order' => 'ASC',
-
     );
-
-	
-
-	
-
 	$allposts = get_posts($args);
-
-	
-
 	/*
-
 	echo "<pre>";
-
 	var_dump($allposts);
-
 	echo "</pre>";
-
 	*/
-
 	//<th>Puzzles</th>
-
 	$record=1;
-
 	$page=1;
-
 	$row=1;
-
 	$table = '<table>
-
 		<tr><th>Title</th>
-
 		<th>Page</th>
-
-		
-
 		<th>Count</th>
-
 		</tr>';
-
 	foreach($allposts as $id){
-
 		set_time_limit(0);
-
 		if($record>=11){$page++;$record=1;}
-
 		//$chapters = count(unserialize(get_post_meta($id,'chapters',TRUE)));
-
-		
-
 		//'.get_post_meta($id,'cw_current_pos',true).'
-
 		//<td>'.$chapters.'</td>
-
 			$table .= '<tr>
-
 			<td><a href="'.esc_url(get_permalink($id)).'">'.esc_html__(get_the_title($id)).'</a></td><td><a href="https://www.crosswordsakenhead.com/crosswords/page/'.$page.'">'.$page.'</a></td>
-
 			<td>'.$row.'</td>';
-
 			$table .= '</tr>';			
-
 			$row++;
-
 			$record++;
-
 			//usleep(500000);
-
 	}
-
-	
-
 	$table .= '</table>';
-
 	echo $table;
-
 }
-
 add_shortcode('cw-crosswordlist','cw_crosswordlist');
-
 //display the categories in front page
-
 add_shortcode('cw-categories',function($attr=[]){
-
-	
-
 	$groupFilter = array(
-
-						'taxonomy'=>'group',
-
-						'hide_empty'=>TRUE,
-
-						'parent'=>0
-
-					);
-
+		'taxonomy'=>'group',
+		'hide_empty'=>TRUE,
+		'parent'=>0
+	);
 	if(count($attr)>0){
-
 		$attr = array_change_key_case($attr);
-
 	}
-
-	
-
 	//get category bby slug name
-
 	if(!empty($attr['slug'])){
-
 		$groupFilter['slug'] = $attr['slug'];
-
 	}
-
-	
-
 	//limit the number of category
-
 	if(!empty($attr['limit'])){
-
 		$groupFilter['number'] = $attr['limit'];
-
 	}
-
 	//skip some records
-
 	if(!empty($attr['offset'])){
-
 		$groupFilter['offset'] = $attr['offset'];
 
 	}
-
 	//hide/display the categories that have no posts
-
 	if(!empty($attr['hide-empty'])){
-
 		$groupFilter['hide_empty'] = $attr['hide-empty'] ? TRUE : FALSE;
-
 	}
-
-	
-
-	
-
-	
-
-	
-
-	
-
 	$groups = get_terms($groupFilter);
-
-	
-
 	//debug_result($groups);
-
-	
-
 	echo '<div>';
-
 	foreach($groups as $group){
-
-			
-
-		
-
 		echo '<div class="col-md-3 col-lg-3 col-sm-6 col-xs-6">'.
-
 			'<a href="';
-
 			if(!empty($attr['cat-view'])){
-
 				echo esc_url(get_term_link($group->term_id));
-
 			}else{
-
 				echo esc_url(get_permalink());
-
 			}
-
 		echo '"><img src="'.get_term_meta($group->term_id,'group_image',TRUE).'">';
-
 				//get_the_post_thumbnail($post->ID,'medium');
-
-				
-
 		//hide/display the hide the footer and the footer title div
-
 		if(!isset($attr['hide-footer'])){
-
 			echo '<div class="cw-cat-title">'.
-
 						$group->name.
-
 					'</div>';
-
 		}elseif(!empty($attr['show-title'])){
-
 			if(!empty($attr['title'])){
-
 				$title = $attr['title'];
-
 			}else{
-
 				$title = $term->name;
-
 			}
-
 			echo '<div class="title"><h3><a style="color:#007bff;" href="';
-
 			if(!empty($attr['cat-view'])){
-
 				echo esc_url(get_term_link($group->term_id));
-
 			}else{
-
 				echo esc_url(get_permalink());
-
 			}
-
-			
-
 			echo '">'.$title.'</a></h3></div>';
-
 		}
-
-		
-
 		echo '</a>'.
-
 			'</div>';
-
 		wp_reset_postdata();
-
 	}
-
 	echo '</div>';
-
 });
-
-
-
 //filter and remove the null value from an array
-
 function filter_null($data){
-
 	if($data==''){
-
 		return FALSE;
-
 	}else{
-
 		return TRUE;
-
 	}
-
 }
-
-
-
-
-
 function cw_templates($template){
-
-    
-
 	global $post;
-
-	
-
-	
-
 	 if(get_query_var('post_type')!=='cw_crosswords' && empty(get_query_var('group'))){
-
 		 return get_page_template();
-
 	 }
-
-	
-
 	 //listing template included if user custom template exist
-
 	if(is_archive() || is_search()){
-
-		
-
 			if(file_exists(get_stylesheet_directory().'/archive-ad.php')){
-
 					return get_stylesheet_directory().'/archive-ad.php';
-
 			}else{
-
 				return plugin_dir_path(__FILE__).'templates/archive-cw.php';
-
 			}
-
 	}
-
-   
-
 	if(is_single()){
-
 		if(file_exists(get_stylesheet_directory().'/single-ad.php')){
-
 				return get_stylesheet_directory().'/single-ad.php';
-
 		}else{
-
 			return plugin_dir_path(__FILE__).'templates/single-cw.php';
-
 		}
-
 	}
-
 	return $template;
-
 }
-
 add_filter("template_include","cw_templates",1,1);
-
-
-
 //save the crosswords
-
 add_action('save_post','cw_save_crosswords');
-
 function cw_save_crosswords($data){
-
 	global $post;
-
-	
-
 	if($_POST && is_object($post)){	
-
 		if($post->post_type=='cw_crosswords'){
-
-		
-
 			if(!empty($_POST['cw_xml_data'])) {
-
 					// Check if the type is supported. If not, throw an error.
-
 						$chapters = json_decode(stripslashes($_POST['cw_xml_data']),TRUE);
-
 						unset($_POST['cw_xml_data']);
-
 						foreach($chapters as $key=>$val){
-
 							$chapters[$key] = (object)$chapters[$key];
-
-							
-
 						}
-
 						unset($key);
-
 						unset($val);
-
-
-
 						update_post_meta($post->ID,'chapters',serialize($chapters));
-
 						unset($chapters);
-
 						update_post_meta($post->ID,'cw_desc',$_POST['cw_desc']);
 
-				   
-
 				}else{
-
-			
-
 					$chapters = json_decode(stripslashes($_POST['chapter_data']));
-
 					update_post_meta($post->ID,'chapters',serialize($chapters));					
-
 					//update_post_meta($post->ID,'cw_desc',$_POST['cw_desc']);
-
 				}
-
-				
-
 			/*
-
 			if(!empty($_FILES['cw_intro_doc']['name'])){
 
 					$file = wp_upload_bits( $_FILES['cw_intro_doc']['name'], NULL, file_get_contents($_FILES['cw_intro_doc']['tmp_name'])) ;
@@ -539,27 +229,15 @@ function cw_save_crosswords($data){
 			}
 
 			*/
-
 			if(isset( $_REQUEST['intro_file_id'] )){
-
 				update_post_meta($post->ID,'cw_intro_file',sanitize_text_field( $_POST['intro_file_id'] ));
-
 			}
-
 			if ( isset( $_REQUEST['cw_current_pos'] ) ) {
-
 				update_post_meta( $post->ID, 'cw_current_pos', sanitize_text_field( $_POST['cw_current_pos'] ) );
-
 			}
-
-			
-
 			if ( isset( $_REQUEST['cw_model_type_box'] ) ) {
-
 				update_post_meta( $post->ID, 'cw_model_type_box', sanitize_text_field( $_POST['cw_model_type_box'] ) );
-
 			}
-
 			/*
 
 			if ( isset( $_REQUEST['cw_free_box'] ) ) {
@@ -579,13 +257,9 @@ function cw_save_crosswords($data){
 			}
 
 			*/
-
 			if ( isset( $_REQUEST['cw_color_box'] ) ) {
-
 				update_post_meta( $post->ID, 'cw_color_box', sanitize_text_field( $_POST['cw_color_box'] ) );
-
 			}
-
 			/*
 
 			if ( isset( $_REQUEST['cw_logo_type_box'] ) ) {
@@ -607,11 +281,8 @@ function cw_save_crosswords($data){
 			*/
 
 			if ( isset( $_REQUEST['cw_clues_visible_box'] ) ) {
-
 				update_post_meta( $post->ID, 'cw_clues_visible_box', sanitize_text_field( $_POST['cw_clues_visible_box'] ) );
-
 			}
-
 			/*
 
 			if ( isset( $_REQUEST['cw_bulk_clue_mail_box'] ) ) {
@@ -621,39 +292,19 @@ function cw_save_crosswords($data){
 			}
 
 			*/
-
 			if ( isset( $_REQUEST['cw_crossword_access'] ) ) {
-
 				update_post_meta( $post->ID, 'cw_crossword_access', sanitize_text_field( $_POST['cw_crossword_access'] ) );
-
 			}
-
-			
-
 			if(isset($_REQUEST['cw_puzzle_lock']) && $_REQUEST['cw_puzzle_lock']==1){
-
 			    cw_extended_pmpro_save($post->ID,$_REQUEST['cw_extended_pmpro_level_id']);
-
-			    
-
 			}
-
 		}
-
-		
-
 		if($post->post_type=='cw_chapters'){
-
 		    if ( isset( $_REQUEST['cw_app_home_chapter'] ) ) {
-
 				update_post_meta( $post->ID, 'cw_app_home_chapter', sanitize_text_field( $_POST['cw_app_home_chapter'] ) );
-
 			}
-
 		}
-
 	}
-
 }
 
 
@@ -663,107 +314,51 @@ function cw_save_crosswords($data){
 //function to display the chapters metabox
 
 function cw_display_chapters_meta_box(){
-
 	//echo '<pre>';
-
-	
-
 	//echo '<pre>';print_r($chapters);exit;
-
 	echo '<div class="col-md-12">';
-
 	?>
-
 <p>Compressed VERSION</p>
-
 <?php
-
 	$post_id  =get_the_ID();
-
-
-
 	$args = array(
-
 		"post_type"			=> "cw_chapters",
-
 		"post_parent"		=> $post_id,
-
 		"posts_per_page"	=> -1,
-
 		'orderby'			=>'ID',
-
 		'order'				=>'ASC',
-
-		
-
 	);
-
 	$get_chapters = get_posts($args);
-
 	/*
-
 	//$cw_no_chapters = get_post_meta(get_the_ID(),'cw_no_chapters',true);
-
 	//var_dump(get_post_meta(get_the_ID(),'chapters',TRUE));
-
 	if(is_array(get_post_meta(get_the_ID(),'chapters',TRUE))){
-
 	    $xml_chapters = unserialize(get_post_meta(get_the_ID(),'chapters',TRUE));   
-
 	}else{
-
 	    $xml_chapters = array();
-
 	}
-
 	*/
-
 	$xml_chapters = array();
-
     $compress_chapters = array();
-
-    
-
 	//new code for fetch chapters
-
 	if(count($get_chapters)>0){
-
 	    $compress_chapters = array();
-
 		foreach($get_chapters as $k=>$postchapter){
-
 			$chapter_detail = unserialize( get_post_meta($postchapter->ID,'chapterdetail',true) );
-
 			$compress_chapters[$postchapter->ID] = $chapter_detail;
-
-			
-
 			?>
-
 			<div class="chapter" id="<?php echo $postchapter->ID;?>">
-
 				<h4><?php echo $postchapter->post_title;?></h4>				
-
 				<div class="operation">
-
 				    <a href="<?php echo get_site_url().'/wp-admin/post.php?post='.$postchapter->ID.'&action=edit';?>"><i class="fa fa-link"></i></a>
-
 				    <span id="<?php echo $postchapter->ID;?>" class="delete"><i class="fa fa-trash"></i></span>
-
 				    <span id="<?php echo $postchapter->ID;?>" class="edit" data-compress="true"><i class="fa fa-pencil"></i></span>
-
 			    </div>
-
 			</div>
-
 			<?php
-
 		}
-
 	}else{
-
 	    /*
-
 		if($cw_no_chapters==null){$k=-1;}	
 
 		for($i=0; $i<$cw_no_chapters;$i++){
@@ -809,755 +404,345 @@ function cw_display_chapters_meta_box(){
 	}
 
 	$xml_chapters = unserialize(get_post_meta(get_the_ID(),'chapters',TRUE)); 
-
-	
-
 	if($xml_chapters!=null){
-
 		?>
-
 	<p>XML VERSION</p>
-
     <?php
-
         $k=-1;
-
 		foreach($xml_chapters as $key=>$chapter){			
-
 			$k++;
-
 			$compress_chapters[$key] = $chapter;
-
 			?>
-
 			<div class="chapter" id="<?php echo $k;?>"><h4><?php echo $chapter->chapterName;?></h4>
-
-				
-
             <div class="operation"><span id="<?php echo $k;?>" class="delete"><i class="fa fa-trash"></i></span>
-
             <span id="<?php echo $k;?>" class="edit" data-compress="false"><i class="fa fa-pencil"></i></span></div>
-
-			
-
 </div>
-
 		<?php 
-
-		
-
 		}
-
 	}
-
 	$chapters = $compress_chapters;
-
 	/*
-
 	if($xml_chapters!=null){
-
 	    $chapters = array_merge($compress_chapters,$xml_chapters);
-
 	}else{
-
 	    $chapters = $compress_chapters;
-
 	}
-
 	*/
-
-
-
 	echo '<div class="chapter new" id="-1"><h4>+ Add New Crossword</h4></div>
-
 		</div>';
-
 	if(is_array($chapters)){
-
 		?>
-
 		<input type="hidden" name="cw_no_chapters" value="<?php echo count($chapters);?>">
-
 	<?php
-
 	}
-
 	?>
-
 	<input type="hidden" name="chapter_data" id="chapter_data" value=''/>
-
-	
-
 	<table style="width: 100%;display: none;" id="detailsTable">
-
 	<hr>
-
 		<tr>
-
 			<th>Dimension</th>
-
 			<td>
-
 				<input type="text" size="5" placeholder="Rows" name="rows" value=""/>
-
 				<input type="text" size="5" placeholder="Cols" name="cols" value=""/>
-
 			</td>
-
 			<th>Crossword</th>
-
 			<td>
-
 				<input type="text" placeholder="Chapter Name" name="chapter_name" value=""/>
-
 				<input type="hidden" name="cw-words" value=''/>
-
 				<input type="hidden" name="chapter_id" value=''/>
-
 			</td>
-
 			<th>Editorial</th>
-
 			<td>
-
 				<input name="chapter_author_name" type="text">				
-
 			</td>
-
 			<td>
-
 				<input type="button" name="add_new_word" value="Add New Word" class="btn btn-primary" style="display:none;" />
-
 				<button type="button" name="update_chapter" class="button button-primary button-small">update</button>
-
 				<button type="button" name="convert_ch" id="" class="button button-primary button-small">Compress <span class="compress-status" style="display:none;"><i class="fa fa-spinner fa-spin"></i></span></span></button>
-
 				<button type="button" name="chapter_reset" id="" class="button button-primary button-small">Reset</button>
-
 			</td>
-
 		</tr>
-
-		
-
 	</table>
-
-	
-
 	<table id="cw_table" class="cw_table" border="1" style="border-collapse: collapse;"></table>
-
-	
-
 	<!-- Modal -->
-
 	  <div class="modal fade" id="myModal" role="dialog">
-
 	    <div class="modal-dialog modal-md">
-
 	      <div class="modal-content">
-
 	        <div class="modal-header">
-
 	          <h3 class="modal-title">Word Details</h3>
-
 	          <button type="button" class="close" data-dismiss="modal">&times;</button>
-
 	        </div>
-
 	        <div class="modal-body">
-
 				<div class="col-md-12">
-
 					<form class="form-horizontal" id="modalForm" onsubmit="return false;">
-
 					    <input type="hidden" name="clue_index">
-
 						<div class="form-group">
-
 							<label for="clue">Coordinates</label>
-
 							<table>
-
 								<tr>
-
 									<td><input type="text" name="cw_y" id="cw_y" value="" class="form-control" placeholder="X value"/></td>
-
 									<td><input type="text" name="cw_x" id="cw_x" value="" class="form-control" placeholder="Y value"/></td>
-
 								</tr>
-
 							</table>
-
 							<p class="text-danger" id="coordinates-error"></p>
-
-							
-
-						</div>
-
-						
-
+						</div>				
 						<div class="form-group">
-
 							<label for="clue">Clue 1</label>
-
 							<!--<input type="text"name="clue" id="clue" value="" class="form-control"/>-->
-
 							<p>
-
 								<button type="button" name="italic-mark"><i>I</i></button>
-
 								<button type="button" name="bold-mark"><b>B</b></button>
-
 							</p>
-
 							<div data-id="clue" data-name="clue" class="text-editor" contenteditable="true"></div>
-
 							<textarea name="clue" id="clue" style="display: none;"></textarea>
-
 							<p class="text-danger" id="clue_error"></p>
-
-							
-
 						</div>
-
 						<div class="form-group">
-
 							<label for="clue">Clue 2</label>
-
 							<!--<input type="text"name="cw_clue2" id="cw_clue2" value=""class="form-control"/>-->
-
 							<div data-id="cw_clue2" data-name="cw_clue2" class="text-editor" contenteditable="true"></div>
-
 							<textarea name="cw_clue2" id="cw_clue2" style="display: none;"></textarea>
-
 							<p class="text-danger" id=""></p>
-
 						</div>
-
 							<div class="form-group">
-
 							<label for="cw_dir">Direction</label>
-
 							<select name="cw_dir" id="cw_dir" class="form-control">
-
 							    <option value="Across">Across</option>
-
 							    <option value="Down">Down</option>
-
 							</select>
-
 							<p class="text-danger" id=""></p>
-
 						</div>
-
 						<div class="form-group">
-
 							<label for="hint">Hint</label>
-
 							<!--<input type="text" name="hint" placeholder="Hint" id="hint" value="" class="form-control"/>-->
-
 							<div data-id="hint" data-name="hint" class="text-editor" contenteditable="true"></div>
-
 							<textarea name="hint" id="hint" style="display: none;"></textarea>
-
 							<p class="text-danger" id="hint_error"></p>
-
 						</div>
-
 						<div class="form-group">
-
 							<label for="cw_number">Number</label>
-
 							<input type="text"name="cw_number" id="cw_number" value=""class="form-control"/>
-
 							<p class="text-danger" id="number-error"></p>
-
 						</div>
-
 						<div class="form-group">
-
 							<label for="cw_randomLetterNoSet">Random Letter NoSet</label>
-
 							<input type="checkbox"name="cw_randomLetterNoSet" id="cw_randomLetterNoSet" checked class="form-control"/>
-
 							<p class="text-danger" id=""></p>
-
 						</div>
-
 						<div class="form-group">
-
 							<label for="cw_word">Word</label>
-
 							<input type="text"name="cw_word" id="cw_word" value="" class="form-control"/>
-
 							<p class="text-danger" id=""></p>
-
 						</div>						
-
-						
-
 						<div class="form-group pull-right">
-
 							<button type="button" name="save" class="btn btn-success" id="save">Save</button>
-
 							<button type="button" name="delete_word" class="btn btn-info" id="delete-word">Delete</button>
-
 	          				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-
 						</div>
-
-						
-
 						<div class="form-group pull-left">
-
 							<h4 id="status_msg" style="font-style: 16px;display: none;"></h4>
-
 						</div>
-
 						<input type="hidden" name="cw_clue_index" id="cw_clue_index">
-
-						
-
 					</form>
-
 				</div>
-
 	        </div>
-
 	        <div class="modal-footer"></div>
-
 	      </div>
-
 	    </div>
-
 	</div>
-
-		
-
 <?php 
-
-
-
-
-
     $compress_chapters = array();
-
 	$get_chapters = array();
-
 	$chapters = array();
-
     $args = array(
-
 		"post_type"			=> "cw_chapters",
-
 		"posts_per_page"		=>-1,
-
 		"post_status"		=> "publish",
-
 		"ordre"				=> "ID",
-
 		"orderby"			=> "ASC",
-
 		"post_parent"		=>get_the_ID()
-
 	);
-
 	$get_chapters = get_posts($args);
-
 	if(count($get_chapters)>0){
-
 		foreach($get_chapters as $k=>$chapter){
-
 			$chapter_detail = unserialize( get_post_meta($chapter->ID,'chapterdetail',true) );		
-
 			//$compress_chapters[$chapter->ID] = $chapter_detail;
-
 			$chapters[$chapter->ID] = $chapter_detail;
-
 		}
-
 	}
-
-	
-
 	    $xml_chapters = unserialize(get_post_meta(get_the_ID(),'chapters',TRUE));
-
 	    if($xml_chapters!=null){
-
 	        foreach($xml_chapters as $k=>$data){
-
 	            $chapters[$k] = $data;
-
 	        }
-
 	    }
-
 	wp_enqueue_style('cw-style-css',plugins_url('assets/css/style.css',__FILE__));
-
 	wp_enqueue_script('cw-script-js',plugins_url('assets/js/script.js',__FILE__));
-
 	wp_localize_script('cw-script-js','adminlocaljs',array('chapters'	=> $chapters,							
-
 												'current_post_id'=>get_the_id(),
-
 												'ajaxUrl'=>admin_url('admin-ajax.php'),
-
 												));
-
-
-
 }
-
-
-
 //initialize the admin meu icon an d create the cuetom post types
-
 add_action('init','cw_create_custom_menu');
-
 function cw_create_custom_menu(){	
-
 	register_post_type('cw_crosswords',array(
-
 		'labels'		=> array(
-
 								'name'				=>	'Crosswords',
-
 								'singular_name'		=>	'Crossword',
-
 								'add_new'			=>	'Add New',
-
 								'add_new_item'		=>	'Add New Crossword',
-
 								'edit'				=>	'Edit',
-
 								'edit_item'			=>	'Edit Crossword',
-
 								'view'				=>	'View',
-
 								'view_items'		=>	'View Crossword',
-
 								'search_items'		=>	'Search Crosswords',
-
 								'not_found'			=>	'No Crosswords Found',
-
 								'not_found_in_trash'=>	'No Crosswords Found in Trash',
-
 								'parent'			=>	'Parent Crossword'
-
 								),
-
 		'public'		=> TRUE,
-
 		'menu_position'	=> 3,
-
 		'menu_icon'		=> 'dashicons-editor-kitchensink',
-
 		'has_archive'	=> TRUE,
-
 		'rewrite' 		=> array('slug' => 'crosswords'),
-
 		'supports'		=> array('thumbnail','title','editor')
-
 		));
-
 	//remove_post_type_support('cw_crosswords','editor');	
-
 }
-
-
-
-
-
 add_action('init','cw_create_chapters_post_type');
-
 function cw_create_chapters_post_type(){
-
 	register_post_type('cw_chapters',array(
-
 		'labels'		=> array(
-
 								'name'				=>	'Chapters',
-
 								'singular_name'		=>	'Chapter',
-
 								'add_new'			=>	'Add New',
-
 								'add_new_item'		=>	'Add New Chapter',
-
 								'edit'				=>	'Edit',
-
 								'edit_item'			=>	'Edit Chapter',
-
 								'view'				=>	'View',
-
 								'view_items'		=>	'View Chapter',
-
 								'search_items'		=>	'Search Chapter',
-
 								'not_found'			=>	'No Chapters Found',
-
 								'not_found_in_trash'=>	'No Chapters Found in Trash',
-
 								'parent'			=>	'Parent Chapter'
-
 								),
-
 		'public'		=> TRUE,
-
 		"show_in_menu"  => FALSE,
-
 		'menu_icon'		=> 'dashicons-editor-kitchensink',
-
 		'has_archive'	=> TRUE,
-
 		'rewrite' 		=> array('slug' => 'cwchapters'),
-
 		'supports'		=> array('thumbnail','title')
-
 		));
-
 	remove_post_type_support('cw_chapters','editor');
-
 }
-
-
-
-
-
 add_action('init','cw_create_device_post_type');
-
 function cw_create_device_post_type(){
-
 	register_post_type('cw_device_install',array(
-
 		'labels'		=> array(
-
 								'name'				=>	'Devices',
-
 								'singular_name'		=>	'Device',
-
 								'add_new'			=>	'Add New',
-
 								'add_new_item'		=>	'Add New Device',
-
 								'edit'				=>	'Edit',
-
 								'edit_item'			=>	'Edit Device',
-
 								'view'				=>	'View',
-
 								'view_items'		=>	'View Device',
-
 								'search_items'		=>	'Search Device',
-
 								'not_found'			=>	'No Devices Found',
-
 								'not_found_in_trash'=>	'No Devices Found in Trash',
-
 								'parent'			=>	'Parent Device'
-
 								),
-
 		'public'		=> TRUE,
-
 		"show_in_menu"  => FALSE,
-
 		'menu_icon'		=> 'dashicons-editor-kitchensink',
-
 		'has_archive'	=> TRUE,
-
 		'rewrite' 		=> array('slug' => 'devices'),
-
 		'supports'		=> array('thumbnail','title')
-
 		));
-
 	remove_post_type_support('cw_device_install','editor');
-
 }
-
-
-
-
-
 add_action('admin_menu', 'cw_add_submenu');
-
 function cw_add_submenu(){
-
-
-
 	add_submenu_page(
-
         'edit.php?post_type=cw_crosswords',
-
         'Chapters',
-
         'Chapters',
-
         'manage_options',
-
 		'edit.php?post_type=cw_chapters' );
-
-
-
 	add_submenu_page(
-
 		'edit.php?post_type=cw_crosswords',
-
 		'Devices',
-
 		'Devices',
-
 		'manage_options',
-
 		'edit.php?post_type=cw_device_install' );
-
 	add_submenu_page(
-
         'edit.php?post_type=cw_crosswords',
-
         'Options',
-
         'Options',
-
         'manage_options',
-
         'cw-options',
-
         'cw_options_callback' );
-
 }
-
-
-
 //upload intro metabox
-
 function cw_upload_doc_meta_box(){
-
 	$cw_intro_file = get_post_meta(get_the_ID(),'cw_intro_file',true);
-
 	$img = wp_get_attachment_image_src($cw_intro_file,'thumbnail',true);
-
 	$html = '<p class="description">';
-
     $html .= 'Upload the .doc file.';
-
     $html .= '</p>';
-
 	$html .='<p>';
-
     $html .= '<img src="'.$img[0].'" width="'.$img[1].'" height="'.$img[2].'">';
-
     $html .='</p>';
-
 	$html .= '<input type="hidden" name="intro_file_id" id="intro-file-id">';
-
 	$html .='<button type="button" class="btn btn-default" id="add-intro-file">Upload PDF File</button>';
-
     $html .= '<span class="text-danger"></span>';
-
-     
-
     echo $html;
-
 }
-
-
-
 //show app home 
-
 function cw_app_home_chapter_box(){
-
 	$cw_app_home_chapter = get_post_meta(get_the_ID(),'cw_app_home_chapter',TRUE);
-
-	
-
 	$html ='<p> On / Off show at home page of App</p>';
-
 	if($cw_app_home_chapter==1){
-
 		$html .='<p>
-
   	<label>Yes <input name="cw_app_home_chapter" type="radio" value="1" checked ></label>
-
 	<label>No <input name="cw_app_home_chapter" type="radio" value="0" ></label>
-
   </p>';
-
 	}else{
-
 		$html .='<p>
-
   	<label>Yes <input name="cw_app_home_chapter" type="radio" value="1"  ></label>
-
 	<label>No <input name="cw_app_home_chapter" type="radio" value="0" checked></label>
-
   </p>';
-
 	}
-
   echo $html;
-
 }
-
-
-
 //sort metabox
-
 function cw_sort_box(){
-
 	$cw_current_pos = get_post_meta(get_the_ID(),'cw_current_pos',TRUE);
-
 	if($cw_current_pos==null){
-
 		$cw_current_pos = 1;
-
 	}
-
 	$html ='<p>Enter the position at which you would like the Crossword to appear. For exampe, Crossword "1" will appear first, Crossword "2" second, and so forth.</p>
-
   <p><input type="number" name="cw_current_pos" value="'.$cw_current_pos.'" /></p>';
-
   echo $html;
-
 }
-
-
-
 function cw_model_type_box(){
-
 	$cw_model_type_box = get_post_meta(get_the_ID(),'cw_model_type_box',TRUE);
-
 	$list = array('books'=>'Books','drag-drop'=>'Drag Drop','word-game'=>'Word Game');
-
 	$html ='<p>Game type</p>
-
   <p>
-
   <select name="cw_model_type_box">';
-
   foreach($list as $k=>$v){
-
 	if($k==$cw_model_type_box){
-
 		$html .='<option value="'.$k.'" selected>'.$v.'</option>';
-
 	}else{
-
 		$html .='<option value="'.$k.'">'.$v.'</option>';
-
 	}
-
   }
-
   $html .='</select></p>';
-
   echo $html;
-
 }
-
 /*
-
 function cw_free_box(){
 
 	$cw_free_box = get_post_meta(get_the_ID(),'cw_free_box',TRUE);	
@@ -1637,41 +822,23 @@ function cw_compition_box(){
 }
 
 */
-
 function cw_color_box(){
-
 	$cw_color_box = get_post_meta(get_the_ID(),'cw_color_box',TRUE);	
-
 	$list = array('the-times'=>'Blue','the-sun'=>'Orange','the-sunday-times'=>'Purple');
-
 	$html ='<p>Theme (Select Theme For Grid)</p>
-
   <p>
-
   <select name="cw_color_box">';
-
   foreach($list as $k=>$v){
-
 	if($k==$cw_color_box){
-
 		$html .='<option value="'.$k.'" selected>'.$v.'</option>';
-
 	}else{
-
 		$html .='<option value="'.$k.'">'.$v.'</option>';
-
 	}
-
   }
-
   $html .='</select></p>';
-
   echo $html;
-
 }
-
 /*
-
 function cw_logo_type_box(){
 
 	$cw_logo_type_box = get_post_meta(get_the_ID(),'cw_logo_type_box',TRUE);	
@@ -1743,41 +910,21 @@ function cw_clue_type_box(){
 */
 
 function cw_clues_visible_box(){
-
 	$cw_clues_visible_box = get_post_meta(get_the_ID(),'cw_clues_visible_box',TRUE);
-
 	$html ='<p> Show Clues list On / Off </p>';
-
 	if($cw_clues_visible_box=='yes'){
-
 		$html .='<p>
-
   	<label>Yes <input name="cw_clues_visible_box" type="radio" value="yes" checked ></label>
-
 	<label>No <input name="cw_clues_visible_box" type="radio" value="no" ></label>
-
   </p>';
-
 	}else{
-
 		$html .='<p>
-
   	<label>Yes <input name="cw_clues_visible_box" type="radio" value="yes"  ></label>
-
 	<label>No <input name="cw_clues_visible_box" type="radio" value="no" checked></label>
-
   </p>';
-
 	}
-
-  
-
   echo $html;
-
 }
-
-
-
 /*
 
 function cw_bulk_clue_mail_box(){
@@ -1817,301 +964,128 @@ function cw_bulk_clue_mail_box(){
 */
 
 /*access to crossword*/
-
 function cw_crossword_access_box(){
-
 	$cw_crossword_access = get_post_meta(get_the_ID(),'cw_crossword_access',TRUE);
-
 	?>
-
 	<p> Select Any One Option below </p>
-
 	<?php
-
 	if($cw_crossword_access=='archive-lock'){
-
 	    ?>
-
         <p>
-
       	    <label>ENTER <input name="cw_crossword_access" type="radio" value="enter" ></label>
-
     	    <label>ARCHIVE LOCK <input name="cw_crossword_access" type="radio" value="archive-lock" checked></label>
-
     	    <label>IN PROCESS LOCK <input name="cw_crossword_access" type="radio" value="in-precess-lock" ></label>
-
         </p>
-
     <?php
-
-		
-
 	}else if($cw_crossword_access=='in-precess-lock'){
-
 	    ?>
-
         <p>
-
           	<label>ENTER <input name="cw_crossword_access" type="radio" value="enter" ></label>
-
         	<label>ARCHIVE LOCK<input name="cw_crossword_access" type="radio" value="archive-lock"></label>
-
         	<label>IN PROCESS LOCK <input name="cw_crossword_access" type="radio" value="in-precess-lock" checked></label>
-
         </p>
-
     <?php
-
-		
-
 	}else{
-
 	    ?>
-
     	<p>
-
           	<label>ENTER <input name="cw_crossword_access" type="radio" value="enter" checked ></label>
-
         	<label>ARCHIVE LOCK <input name="cw_crossword_access" type="radio" value="archive-lock" ></label>
-
         	<label>IN PROCESS LOCK <input name="cw_crossword_access" type="radio" value="in-precess-lock" ></label>
-
         </p>
-
     <?php
-
 	}
-
 	?>
-
 	    <p> Lock All Puzzles </p>
-
     	<?php
-
-    	
-
     	global $post, $wpdb;
-
     	$membership_levels = pmpro_getAllLevels(true, true);
-
-    	
-
-
-
     	$level = $membership_levels[2];
-
     	?>
-
 	    <p>
-
 	        <input name="cw_extended_pmpro_level_id" type="hidden" value="<?php echo $level->id;?>">
-
 	        <label>Yes <input name="cw_puzzle_lock" type="radio" value="1" checked ></label>
-
         	<label>No <input name="cw_puzzle_lock" type="radio" value="0" ></label>
-
 	    </p>
-
 	<?php
-
 }
-
-
-
 function cw_add_order_column( $defaults ){
-
 	global $post;
-
 	if($post->post_type=='cw_crosswords'){
-
 		$defaults['cw_current_pos'] = 'Position';
-
 	}
-
-
-
     return $defaults;
-
 }
-
 add_filter('manage_posts_columns' , 'cw_add_order_column');
-
-
-
 /* Display custom post order in the post list */
-
-
-
 function cw_order_value( $column, $post_id ){
-
   $postObj = get_post($post_id);
-
   if($postObj->post_type=='cw_crosswords'){
-
 	if ($column == 'cw_current_pos' ){
-
 		$cw_current_pos = get_post_meta( $post_id, 'cw_current_pos', true);
-
 		if($cw_current_pos==null){
-
 			$cw_current_pos=1;
-
 		}
-
 		echo '<p>' . $cw_current_pos . '</p>';
-
 	}
-
   }
-
 }
-
 add_action( 'manage_posts_custom_column' , 'cw_order_value' , 10 , 2 );
-
-
-
-
-
-
-
 function cw_sort_by( $query ) {
-
-
-
-if( $query->is_main_query() && (is_post_type_archive( 'cw_crosswords' ) || is_tax( 'group' ))) {
-
+	if( $query->is_main_query() && (is_post_type_archive( 'cw_crosswords' ) || is_tax( 'group' ))) {
 		$query->set( 'orderby', 'meta_value_num' );
-
 		$query->set( 'meta_key', 'cw_current_pos' );
-
 		$query->set( 'order' , 'ASC' );
-
 	}
-
 }
-
 add_action( 'pre_get_posts', 'cw_sort_by' );
-
-
-
-
-
-
-
 //import books
-
 function cw_import_book_meta_box(){
-
-
-
 	 wp_nonce_field(plugin_basename(__FILE__), 'wp_custom_attachment_nonce');
-
-     
-
     $html = '<p class="description">';
-
     $html .= 'Upload your XML here.';
-
     $html .= '</p>';
-
     $html .= '<input type="file" id="cw_custom_attachment" name="cw_custom_attachment"/>';
-
     $html .= '<input type="hidden" id="cw_xml_data" name="cw_xml_data" />';
-
     $html .= '<span class="text-danger" id="cw_file_msg"></span>';
-
-     
-
     echo $html;
-
 }
-
 //display the ui of the user defined metabox
-
 function display_crossword_meta_boxes($data){ ?>
-
-
-
-<textarea name="cw_desc" id="cw_desc" style="width:100%;" rows="8"><?php echo get_post_meta(get_the_ID(),'cw_desc',TRUE);?></textarea>
-
-
-
+	<textarea name="cw_desc" id="cw_desc" style="width:100%;" rows="8"><?php echo get_post_meta(get_the_ID(),'cw_desc',TRUE);?></textarea>
 <?php
-
 	$compress_chapters = array();
-
 	$get_chapters = array();
-
 	$chapters = array();
-
     $args = array(
-
 		"post_type"			=> "cw_chapters",
-
 		"posts_per_page"		=>-1,
-
 		"post_status"		=> "publish",
-
 		"ordre"				=> "ID",
-
 		"orderby"			=> "ASC",
-
 		"post_parent"		=>get_the_ID()
-
 	);
-
 	$get_chapters = get_posts($args);
-
 	if(count($get_chapters)>0){
-
 		foreach($get_chapters as $k=>$chapter){
-
 			$chapter_detail = unserialize( get_post_meta($chapter->ID,'chapterdetail',true) );		
-
 			//$compress_chapters[$chapter->ID] = $chapter_detail;
-
 			$chapters[$chapter->ID] = $chapter_detail;
-
 		}
-
 	}
-
-	
-
 	    $xml_chapters = unserialize(get_post_meta(get_the_ID(),'chapters',TRUE));
-
 	    if($xml_chapters!=null){
-
 	        foreach($xml_chapters as $k=>$data){
-
 	            $chapters[$k] = $data;
-
 	        }
-
 	    }
-
-	
-
 	wp_enqueue_style('cw-style-css',plugins_url('assets/css/style.css',__FILE__));
-
 	wp_enqueue_script('cw-script-js',plugins_url('assets/js/script.js',__FILE__));
-
 	wp_localize_script('cw-script-js','adminlocaljs',array('chapters'	=> $chapters,							
-
 												'current_post_id'=>get_the_id(),
-
 												'ajaxUrl'=>admin_url('admin-ajax.php'),
-
 												));
-
 }
-
-
-
 function get_load_chapter_assets(){
-
-    
-
     $compress_chapters = array();
 
 	$get_chapters = array();
@@ -2546,6 +1520,37 @@ function save_taxonomy_image_upload( $term_id ) {
 
 }
 
+add_action( 'wp_ajax_set_player_details', 'set_player_details' );
+
+function set_player_details(){
+	$player_details = $_POST['player_details'];
+	$countrylistapi = array(
+		CURLOPT_URL             => 'https://restcountries.eu/rest/v2/name/'.$player_details['country'].'?fullText=true',
+		CURLOPT_POST            => false,
+		CURLOPT_HEADER          => false,
+		CURLOPT_SSL_VERIFYPEER  => false,
+		CURLOPT_RETURNTRANSFER  => true,
+		CURLOPT_SSL_VERIFYHOST  => false,
+	);
+	$curl = curl_init();
+	curl_setopt_array($curl, $countrylistapi);
+	$curl_response = curl_exec($curl);
+	$countryObj = json_decode($curl_response);
+	$player_details['flag'] = $countryObj[0]->flag;
+
+	$user_id = $_POST['userid'];
+	update_user_meta($user_id,'player_details',serialize($player_details));
+	header( "Content-Type: application/json" );
+	echo json_encode(array(
+		'data'	=> $player_details,
+		'status' =>true,
+		'responce'=>$countryObj,
+		));
+	exit();	
+}
+
+
+
 add_action( 'wp_ajax_get_page_content', 'get_page_content' );
 
 function get_page_content(){
@@ -2779,511 +1784,217 @@ function update_chapter(){
 	*/
 	header( "Content-Type: application/json" );
 	echo json_encode(array(
-
 		'data'	=> $chapter_detail,
-
 		'status' =>$status,
-
 		));
-
-	
-
 	exit();
-
-	
-
 }
 
 add_action( 'wp_ajax_add_chapter', 'add_chapter' );
-
 function add_chapter(){
-
 	$chapter = $_POST['chapter'];
-
 	$post_id = $_POST['post_id'];
-
 	$chapter_detail = array(
-
-							'chapterName'=>$chapter['chapterName'],
-
-							'rows'=>$chapter['rows'],
-
-							'cols'=>$chapter['cols'],
-
-							'no_of_clues'=>$chapter['no_of_clues'],
-
-							'chapter_index'=>$chapter['chapter_index'],
-
-							'chapterAuthorName'=>$chapter['chapterAuthorName']
-
-						);
-
-	
-
-	
-
+		'chapterName'=>$chapter['chapterName'],
+		'rows'=>$chapter['rows'],
+		'cols'=>$chapter['cols'],
+		'no_of_clues'=>$chapter['no_of_clues'],
+		'chapter_index'=>$chapter['chapter_index'],
+		'chapterAuthorName'=>$chapter['chapterAuthorName']
+	);
 	$clue = $chapter['clues'][0];
-
 	$clues = $chapter['clues'];
-
 	$cw_no_chapters = $chapter['chapter_index']+1;
-
-	
-
-	
-
 	update_post_meta($post_id,'chapterdetail'.$chapter['chapter_index'],serialize( $chapter_detail));
 
-
-
-
-
 	//create new chapter post type
-
 	$args = array(
-
 		'post_type' 		=> 'cw_chapters',
-
 		'post_title'		=> $chapter_detail['chapterName'],
-
 		'post_status'		=> 'publish',
-
 		'post_parent'		=> $post_id,
-
 	);
 
 	$chapter_id = wp_insert_post($args);
-
 	unset($chapter_detail['chapterName']);	
-
 	unset($chapter['chapter_index']);
-
 	update_post_meta($chapter_id,'chapterdetail',serialize( $chapter_detail));
-
 	$chapter['chapter_id'] = $chapter_id;
 
-
-
-	
-
 	update_post_meta($post_id,'cw_no_chapters',$cw_no_chapters);
-
 	if(count($clues)>0){
-
 		//update_post_meta($post_id,'chapter'.$chapter['chapter_index'].'clue0',$clue);
-
 		update_post_meta($chapter['chapter_id'],'clues',serialize($clues));
-
 		$status=true;
-
 	}else{
-
 		$status=false;
-
 	}
-
-	
-
 	header( "Content-Type: application/json" );
-
-	
-
 	echo json_encode(array(
-
 		'data'	=> $chapter,
-
 		));
-
-	
-
 	exit();
-
 }
 
 add_action( 'wp_ajax_convert_cw_chapter', 'convert_cw_chapter' );
-
 function convert_cw_chapter(){
-
 	$chapterName = $_POST['chapterName'];
-
 	$post_id = $_POST['post_id'];
-
 	$chapter_index = $_POST['chapter_index'];
-
 	$rows = $_POST['rows'];
-
 	$cols = $_POST['cols'];
-
 	$no_of_clues = $_POST['no_of_clues'];
-
-	
-
-	
-
 	$chapter_detail = array(
-
-							'chapterName'=>$chapterName,
-
-							'rows'=>$rows,
-
-							'cols'=>$cols,
-
-							'no_of_clues'=>$no_of_clues,
-
-							'chapter_index'=>$chapter_index
-
-						);
-
-	
-
+		'chapterName'=>$chapterName,
+		'rows'=>$rows,
+		'cols'=>$cols,
+		'no_of_clues'=>$no_of_clues,
+		'chapter_index'=>$chapter_index
+	);
 	update_post_meta($post_id,'chapterdetail'.$chapter_index,serialize( $chapter_detail));
-
 	header( "Content-Type: application/json" );
-
-	
-
 	echo json_encode(array(
-
 			'data'	=> $chapter_detail
-
 		));
-
-	
-
 	exit();
-
 }
 
 add_action( 'wp_ajax_add_clue_chapter', 'add_clue_chapter' );
-
 function add_clue_chapter(){
-
-	
-
 	if(!isset($_POST['clues'])){
-
-		
-
 		$clue = $_POST['clue'];
-
 		$post_id = $_POST['post_id'];
-
 		$chapter_index = $_POST['chapter_index'];
-
 		//$cw_no_chapters = $_POST['cw_no_chapters'];
-
 		//$clue_index = $_POST['clue_index'];
-
-
-
         /*
-
 		$clues = get_post_meta($chapter_index,'clues',true);
-
 		if(count($clues)>0){
-
 			if(isset($clues[$clue_index])){
-
 				$clues[$clue_index] = $clue;
-
 			}else{
-
 				$clues[] = $clue;
-
 			}
-
 		}else{
-
 			$clues[] = $clue;
-
 		}
-
 		*/
-
-		
-
-		
-
 		//$status = update_post_meta($chapter_id,'clues', $clue );
-
-		
-
 		$status = update_post_meta( $chapter_index, 'clues', $clue );
-
-		
-
 		$clues = $clue;
-
 	}else{
-
-	    
-
 		$clues = $_POST['clues'];
-
 		$post_id = $_POST['post_id'];
-
 		$chapter_detail['rows'] = $_POST['rows'];
-
 		$chapter_detail['cols'] = $_POST['cols'];
-
 		$status = true;
-
-		
-
 		$args = array(
-
 			'post_type' 		=> 'cw_chapters',
-
 			'post_title'		=> $_POST['chapter_name'],
-
 			'post_status'		=> 'publish',
-
 			'post_parent'		=> $post_id,
-
 		);
-
 		$chapter_id = wp_insert_post($args);
-
 		if($chapter_id>0){
-
 			add_post_meta ($chapter_id,'clues',$clues);
-
 			add_post_meta ($chapter_id,'chapterdetail',serialize( $chapter_detail));
-
 			$clues =  get_post_meta($chapter_id,'clues',true);
-
 			//$clues = unserialize($clues);
-
-
-
 			$status = true;
-
 		}else{
-
 			$status = false;
-
 		}
-
 	}
-
 	wp_send_json_success(array(
-
 		'data'=> $clues,
-
 		'status'=>$status,
-
 	));
-
 }
-
 add_action( 'wp_ajax_get_cw_chapter_clues', 'get_cw_chapter_clues' );
-
 function get_cw_chapter_clues(){
-
-	
-
 	$post_id = $_POST['post_id'];
-
 	$chapter_index = $_POST['chapter_index'];
-
     $args = array(
-
         "ID"                =>$chapter_index,
-
 		"post_type"			=> "cw_chapters",
-
 		"post_parent"		=> $post_id,
-
 	);
-
 	$get_chapters = get_posts($args);
-
-    
-
-    	
-
 	if(count($get_chapters)<0){
-
 	    $chapter_detail = unserialize(get_post_meta($post_id,'chapterdetail'.$chapter_index,true));
-
 		$no_of_clues = $chapter_detail['no_of_clues'];
-
 		$clues =array();
-
 		for($i=0;$i<$no_of_clues;$i++){
-
 			$clue = get_post_meta($post_id,'chapter'.$chapter_index.'clue'.$i);
-
 			$temp_clue = (array) $clue[0];
-
 			$temp_clue['clueindex'] = $i;
-
 			$temp_clue = (object) $temp_clue;
-
-			
-
-			
-
 			if($clue!=null){
-
 				$clues[] = $temp_clue;
-
 			}
-
 		}
-
 		$chapter['clues'] = $clues;
-
 		$chapter = array_merge($chapter,$chapter_detail);		
-
 	}else{
-
-		
-
 		$chapter_detail = unserialize( get_post_meta($chapter_index,'chapterdetail',true));
-
 		$chapter_detail['chapterName'] = $get_chapters[0]->post_title;
-
 		$no_of_clues = $chapter_detail['no_of_clues'];
-
 		$clues =array();
-
 		$clues =  get_post_meta($chapter_index,'clues',true);
-
 		if(!$clues){
-
 		    $clues =array();
-
 		}
-
 		$chapter['clues'] = $clues;
-
 		$chapter = array_merge($chapter,$chapter_detail);
-
 	}
-
-		
-
 	header( "Content-Type: application/json" );
-
-	
-
 	echo json_encode(array(
-
 			'data'=> $chapter,
-
 		));
-
 	exit();
-
 }
 
 add_action( 'wp_ajax_delete_clue_chapter', 'delete_clue_chapter' );
-
-
-
 function delete_clue_chapter(){
-
-    
-
 	$chapter_index = $_POST['chapter_index'];
-
 	$clue_index = $_POST['clue_index'];
-
-	
-
 	$clues =  get_post_meta($chapter_index,'clues',true);
-
-	
-
 	unset($clues[$clue_index]);
-
 	$clues = array_values($clues);
-
 	update_post_meta($chapter_index,'clues', $clues );
-
-
-
 	$chapter_detail = unserialize( get_post_meta($chapter_index,'chapterdetail',true));
-
 	$chapter_detail['no_of_clues'] = $chapter_detail['no_of_clues']-1;
-
 	update_post_meta($chapter_index,'chapterdetail'.$chapter_index,serialize( $chapter_detail));
-
-	
-
 	$chapter['clues'] = get_post_meta($chapter_index,'clues',true);;
-
 	$chapter = array_merge($chapter,$chapter_detail);
-
-	
-
 	header( "Content-Type: application/json" );
-
 	echo json_encode(array(
-
 			'data'=> $chapter,
-
 		));
-
 	exit();
-
 }
-
 add_action( 'wp_ajax_delete_chapter', 'delete_chapter' );
-
 function delete_chapter(){
-
 	$post_id = $_POST['post_id'];
-
 	$chapter_index = $_POST['chapter_index'];
-
 	$cw_no_chapters = $_POST['cw_no_chapters'];
-
-
-
 	wp_delete_post($chapter_index,true);
-
-
-
 	/*
-
 	$chapter_detail = unserialize( get_post_meta($post_id,'chapterdetail'.$chapter_index,true));
-
 	$no_of_clues = $chapter_detail['no_of_clues'];
-
 	$clues =array();
-
 	for($i=0;$i<$no_of_clues;$i++){
-
 		delete_post_meta($post_id,'chapter'.$chapter_index.'clue'.$i);
-
 	}
-
-	
-
 	delete_post_meta($post_id,'chapterdetail'.$chapter_index);
-
-	
-
 	update_post_meta($post_id,'cw_no_chapters',$cw_no_chapters);
-
 	*/
-
-	
-
 	header( "Content-Type: application/json" );
-
 	echo json_encode(array(
-
 			'data'=> $_POST,
-
 		));
-
 	exit();
-
 }
-
 /*
 
 add_action('admin_menu', 'cw_add_submenu');
@@ -3379,125 +2090,64 @@ add_action( 'wp_ajax_cw_switch_free_game', 'cw_switch_free_game' );
 */
 
 function cw_options_callback(){
-
 	?>
-
 	<style>
-
 	.lds-ellipsis {
-
     display: none;
-
     position: relative;
-
     width: 50px;
-
     top: -9px;
-
 }
-
 .lds-ellipsis div {
-
     position: absolute;
-
     width: 11px;
-
     height: 11px;
-
     border-radius: 50%;
-
     background: #ffffff;
-
     animation-timing-function: cubic-bezier(0, 1, 1, 0);
-
 }
-
 .lds-ellipsis div:nth-child(1) {
-
     left: 6px;
-
     animation: lds-ellipsis1 0.6s infinite;
-
 }
-
 .lds-ellipsis div:nth-child(2) {
-
     left: 6px;
-
     animation: lds-ellipsis2 0.6s infinite;
-
 }
-
 .lds-ellipsis div:nth-child(3) {
-
     left: 26px;
-
     animation: lds-ellipsis2 0.6s infinite;
-
 }
-
 .lds-ellipsis div:nth-child(4) {
-
     left: 45px;
-
     animation: lds-ellipsis3 0.6s infinite;
-
 }
-
 .new-collection .lds-ellipsis div {
-
     background: #70AFAD !important;
-
 }
-
 </style>
-
 		<table class="form-table">
-
-
-
 			<tbody>
-
 			<tr>
-
 				<th scope="row"><label for="category-name">Categories</label></th>
-
 				<td>
-
 					<?php
-
 						$cats = get_categories(array(
-
 							'taxonomy' => 'group',
-
 							'orderby' => 'name',
-
 							'order'   => 'ASC',
-
 							'hide_empty' => 0,
-
 						));
-
 						foreach($cats as $cat){
-
 							?>
-
 								<label><input type="checkbox" value="<?php echo $cat->term_id;?>" name="cat_check" class="cat-list">
-
 								<?php echo $cat->name;?>
-
 								</label>
-
 							<?php
-
 						}
-
 					?>
-
 				</td>
-
 			</tr>
-
 			<!--
 
 			<tr>
@@ -3527,227 +2177,112 @@ function cw_options_callback(){
 			</tr>
 
 			-->
-
 			</tbody>
-
 		</table>
-
 		<script>
-
 			$('document').ready(function(){
-
 				$('body').on('click','button[name=switch_free_game]',function(){
-
 					Elem = $(this)
-
 					var catlist = '';
-
 				    $('input.cat-list').each(function(){
-
 				        if($(this).prop('checked')){
-
 				            catlist = $(this).attr('value')
-
 				        }
-
 					})
-
 					cwfreebox = $('select[name=cw_free_box]').val()
-
 					postData = {action:'cw_switch_free_game','catlist':catlist,'cwfreebox':cwfreebox};
-
 					console.log(postData)
-
 					$.ajax({
-
 						url: '<?php echo admin_url('admin-ajax.php');?>',
-
 						type:'post',
-
 						data:postData,
-
 						beforeSend:function(){
-
 							Elem.find('.lds-ellipsis').show();
-
 						},
-
 						success:function(responce){
-
 							Elem.find('.lds-ellipsis').hide();
-
 							console.log(responce)
-
 						},
-
 						error:function(error){
-
 							console.log(error);
-
 						}
-
 					})
-
 				})
-
 			})
-
 		</script>
-
 	<?php
-
 }
-
-
-
 function bulk_clue_mail(){
-
 	if(isset($_POST['sender_email'])){
-
 		//extract($_POST);
-
 		//$admin_email = get_option( 'admin_email' );
-
 		$sender_name = $_POST['sender_name'];
-
 		$sender_country = $_POST['sender_country'];
-
 		$sender_email = $_POST['sender_email'];
-
 		$clue_no = $_POST['clue_no'];
-
 		$clue_text = $_POST['clue_text'];
-
 		$to = 'davidakenhead8@gmail.com';
-
 		$subject = 'bulk clue list from '.$sender_name;
-
 		$body = '
-
 		<table>
-
 			<tbody>
-
 				<tr>
-
 					<td><label>Name</label></td>
-
 					<td><label>'.$sender_name.'</label></td>
-
 					<td><label>Country</label></td>
-
 					<td><label>'.$sender_country.'</label></td>
-
 					<td><label>Email</label></td>
-
 					<td><label>'.$sender_email.'</label></td>
-
 				</tr>';
-
 		$body .='
-
 			<tr>
-
 				<td colspan="2"><label>Clue No</label></td>
-
 				<td colspan="4"><label>Entered Clue</label></td>
-
 			</tr>
-
 			';
-
 			foreach($clue_no as $k=>$val){
-
 				$body .='
-
 				<tr>
-
 					<td colspan="2"><label>'.$val.'</label></td>
-
 					<td colspan="4"><label>'.$clue_text[$k].'</label></td>
-
 				</tr>
-
 				';
-
 			}
-
-		
-
 		$body .='
-
 		</tbody>
-
 		</table>';
-
 		$headers = array('Content-Type: text/html; charset=UTF-8','Reply-To: '.$sender_name.' <'.$sender_email.'>');
-
-		
-
 		$responce = wp_mail( $to, $subject, $body, $headers );
-
 		wp_send_json_success( array( 'success' =>true ,'message'=>'Email Sent','mail'=>$responce,'email'=>$admin_email,'demo'=>$_POST) );
-
 		die();
-
 	}else{
-
 	?>
-
 	<form method="post" id="bulk-clue-mail">
-
 		<div class="row">
-
 			<div class="col-md-4">
-
 				<div class="form-group">
-
 					<label>Name:</label>
-
 					<input type="text" class="form-control" id="sender_name" name="sender_name" />
-
 				</div>
-
 			</div>
-
 			<div class="col-md-4">
-
 				<div class="form-group">
-
 					<label>Country:</label>
-
 					<input type="text" class="form-control" id="sender_country" name="sender_country" />
-
 				</div>
-
 			</div>
-
 			<div class="col-md-4">
-
 				<div class="form-group">
-
 					<label>Your Email:</label>
-
 					<input type="email" class="form-control" id="sender_email" name="sender_email" />
-
 				</div>
-
 			</div>
-
 		</div>
-
 		<div class="clue-list">
-
-					
-
 		</div>
-
 		<div class="row">
-
 			<div class="col-md-4">
-
 				<input type="hidden" name="action" value="bulk_clue_mail" />
-
 				<input type="submit" name="send_bulk_clue_mail" value="Send Mail" />
 			</div>
 			<div class="col-md-12"><div class="message-box"></div></div>		
@@ -3771,19 +2306,40 @@ function get_top_scored(){
 	//var_dump($results);
 	?>
 		<table width="100%">
-			<tr><th>Player</th><th>Score</th><th>Timer</th></tr>
+			<tr><th>Player</th><th>Crossword</th><th>Timer</th><th>Country</th></tr>
 			<?php
 				foreach($results as $leader){
 					?>
 						<tr>
 							<?php
 							$leaderid = explode("-",$leader->id);
-							$user = get_user_by('id',$leaderid[0]);
-							if($user){
+							$args = array(
+								'post_type' => 'cw_crosswords',
+								'ID' => $leaderid[1],
+							);
+							$posts = get_posts($args);
+							$post = $posts[0];
+							$crosswrod = $post->post_title;
+
+							$args = array(
+								'post_type' => 'cw_chapters',
+								'ID' => $leaderid[2],
+							);
+							$posts = get_posts($args);
+							$post = $posts[0];
+							$crosswrod .= ' - '.$post->post_title;
+
+							$player = unserialize( get_user_meta($leaderid[0],'player_details',true));
+												
+							if($player){
+								
+								$countryflag = '<img src="'.$player['flag'].'" rel="'.$player['country'].'" style="height:20px;" />';
+
 								?>
-									<td><?php echo $user->user_login;?></td>
-									<td><?php echo $leader->score;?> Points</td>
-									<td><?php echo $leader->timer;?> Min</td>	
+									<td><?php echo $player['name'];?></td>
+									<td><?php echo $crosswrod;?></td>
+									<td><?php echo $leader->timer;?> Min</td>
+									<td><?php echo $countryflag;?></td>
 								<?php
 							}
 							?>
@@ -3795,81 +2351,35 @@ function get_top_scored(){
 	<?php
 }
 
-
 function wpcw_post_type_archive($query) {
-
     if (!is_admin() && $query->is_archive('cw_crosswords') && $query->is_main_query()) {
-
             $query->set('post_type', 'cw_crosswords');
-
             $query->set('posts_per_page', 12);
-
    }
-
     return $query;
-
 }
-
 add_action( 'pre_get_posts', 'wpcw_post_type_archive' ); 
-
-
-
-
-
 /*paid membership pro extended functional*/
-
 function cw_extended_pmpro_save($post_id,$level){
-
     global $wpdb;
-
-    
-
     $getchapterids = get_posts(
-
         array (
-
             'fields' => 'ids',
-
             "post_type"			=> "cw_chapters",
-
     		"post_parent"		=> $post_id,
-
     		"posts_per_page"	=> -1,
-
     		'orderby'			=>'ID',
-
     		'order'				=>'ASC',
-
         )
-
     );
-
-	
-
 	if(is_array($getchapterids))
-
 	{
-
 		foreach($getchapterids as $chapter_id){
-
 		    //remove all memberships for this page
-
 	        $wpdb->query("DELETE FROM {$wpdb->pmpro_memberships_pages} WHERE page_id = '$chapter_id'");
-
 	        //add new memberships for this page
-
 	        $wpdb->query("INSERT INTO {$wpdb->pmpro_memberships_pages} (membership_id, page_id) VALUES('" . intval($level) . "', '" . intval($chapter_id) . "')");
-
 		}
-
-			
-
 	}
-
-		
-
-	
-
 }
-
 ?>
